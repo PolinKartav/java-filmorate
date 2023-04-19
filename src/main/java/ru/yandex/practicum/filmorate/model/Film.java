@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
 import lombok.Data;
-import java.time.Instant;
 import java.time.LocalDate;
 
 @Data
@@ -11,6 +10,4 @@ public class Film {
     private  String description;
     private LocalDate releaseDate;
     private  double duration;
-
-
 }

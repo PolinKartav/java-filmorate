@@ -6,9 +6,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.validation.ValidationException;
-
-
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
@@ -67,15 +64,5 @@ public class FilmController {
             throw new ValidationException(HttpStatus.BAD_REQUEST, "Продолжительность фильма не может быть 0.");
         }
         return film;
-        /*if(!film.getName().equals(null)){
-            if(film.getDescription().length() <= 200){
-                Instant theEarliestFilm = Instant.parse("1895-12-12");
-                if(film.getReleaseDate().isBefore(theEarliestFilm)){
-                    if(film.getDuration() > 0 ){
-                        return film;
-                    } else throw new ValidationException("Продолжительность фильма не может быть 0.");
-                } else throw new ValidationException("Релиз фильма не может быть опубликован раньше 28.12.1895.");
-            } else throw new ValidationException("Описание фильма не дожно превышать 200 символов.");
-        } else throw new ValidationException("Нет названия фильма.");*/
     }
 }
