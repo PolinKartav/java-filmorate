@@ -54,7 +54,7 @@ public class UserController {
     }
 
     private User checkUser(User user) {
-        if (user == null){
+        if (user == null) {
             throw new ValidationException(HttpStatus.BAD_REQUEST, "Не заполнены данные для создания пользователя.");
         }
         if (user.getEmail() == null || !user.getEmail().contains("@")) {
