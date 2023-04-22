@@ -28,12 +28,14 @@ public class UserController {
     @PostMapping()
     public User createUser(@RequestBody User user) {
         if (users.containsKey(user.getId())) {
+            log.warn("Пользователь уже существует");
             throw new ValidationException(HttpStatus.BAD_REQUEST, "Пользователь уже существует");
         } else {
             User checkedUser = checkUser(user);
             checkedUser.setId(id);
             users.put(id, checkedUser);
             id++;
+            log.info("Пользователь создан: ", checkedUser);
             return checkedUser;
         }
     }
@@ -43,13 +45,18 @@ public class UserController {
         if (users.containsKey(user.getId())) {
             User checkedUser = checkUser(user);
             users.put(user.getId(), checkedUser);
+            log.info("Пользователь обновлен: ", checkedUser);
             return checkedUser;
         } else {
+            log.warn("Такого пользователя не существует");
             throw new ValidationException(HttpStatus.NOT_FOUND, "Такого пользователя не существует");
         }
     }
 
     private User checkUser(User user) {
+        if(user == null){
+            throw new ValidationException(HttpStatus.BAD_REQUEST, "Не заполнены данные для создания пользователя.");
+        }
         if (user.getEmail() == null || !user.getEmail().contains("@")) {
             throw new ValidationException(HttpStatus.BAD_REQUEST, "Email пользователя пуст или некорректно введен.");
         }

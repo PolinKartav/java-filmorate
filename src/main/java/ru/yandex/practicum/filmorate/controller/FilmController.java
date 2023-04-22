@@ -25,37 +25,44 @@ public class FilmController {
     }
 
     @PostMapping()
-    public Film createFilm(@RequestBody Film film) throws ValidationException {
+    public Film createFilm(@RequestBody Film film) {
         if (films.containsKey(film.getId())) {
-            throw new ValidationException(HttpStatus.BAD_REQUEST, "Фильм уже существует");
+            log.warn("Такой фильм уже существует.");
+            throw new ValidationException(HttpStatus.BAD_REQUEST, "Такой фильм уже существует.");
         } else {
             Film checkedFilm = checkFilm(film);
             checkedFilm.setId(id);
             films.put(id, checkedFilm);
             id++;
+            log.info("Фильм создан: ", checkedFilm);
             return checkedFilm;
         }
     }
 
     @PutMapping()
-    public Film updateFilm(@RequestBody Film film) throws ValidationException {
+    public Film updateFilm(@RequestBody Film film) {
         if (films.containsKey(film.getId())) {
             Film checkedFilm = checkFilm(film);
             films.put(film.getId(), checkedFilm);
+            log.info("Фильм обновлен: ", checkedFilm);
             return checkedFilm;
         } else {
-            throw new ValidationException(HttpStatus.NOT_FOUND, "Такого фильма не существует.");
+            log.warn("Такой фильм не существует.");
+            throw new ValidationException(HttpStatus.NOT_FOUND, "Такой фильм не существует.");
         }
     }
 
-    public Film checkFilm(Film film) throws ValidationException {
+    public Film checkFilm(Film film) {
+        if (film == null) {
+            throw new ValidationException(HttpStatus.BAD_REQUEST, "Не заполнены данные для создания фильма.");
+        }
         if (film.getName() == null || film.getName().isBlank()) {
             throw new ValidationException(HttpStatus.BAD_REQUEST, "Нет названия фильма.");
         }
         if (film.getDescription().length() > 200) {
             throw new ValidationException(HttpStatus.BAD_REQUEST, "Описание фильма не дожно превышать 200 символов.");
         }
-        LocalDate theEarliestFilm = LocalDate.parse("1895-12-12");
+        LocalDate theEarliestFilm = LocalDate.parse("1895-12-28");
         if (film.getReleaseDate().isBefore(theEarliestFilm)) {
             throw new ValidationException(HttpStatus.BAD_REQUEST, "Релиз фильма не может быть опубликован раньше 28.12.1895.");
         }
