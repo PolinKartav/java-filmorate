@@ -2,72 +2,81 @@ package ru.yandex.practicum.filmorate.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.validation.ValidationException;
 
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/films")
 public class FilmController {
     private static final Logger log = LoggerFactory.getLogger(FilmController.class);
     private HashMap<Integer, Film> films = new HashMap<>();
-    private int id = 1;
+    private final FilmService filmService;
+
+    @Autowired
+    public FilmController(FilmService filmService) {
+        this.filmService = filmService;
+    }
 
     @GetMapping()
-    public Collection<Film> findAllFilms() {
+    public List<Film> getAllFilms() {
         log.debug("Текущее количество фильмов: {}", films.size());
-        return films.values();
+        return filmService.getAllFilms();
+    }
+
+    @GetMapping("/{id}")
+    public Film getFilm(@PathVariable long id) {
+        return filmService.getFilm(id);
     }
 
     @PostMapping()
     public Film createFilm(@RequestBody Film film) {
-        if (films.containsKey(film.getId())) {
-            log.warn("Такой фильм уже существует.");
-            throw new ValidationException(HttpStatus.BAD_REQUEST, "Такой фильм уже существует.");
-        } else {
-            Film checkedFilm = checkFilm(film);
-            checkedFilm.setId(id);
-            films.put(id, checkedFilm);
-            id++;
-            log.info("Фильм создан: ", checkedFilm);
-            return checkedFilm;
-        }
+        return filmService.createFilm(checkFilm(film));
     }
 
     @PutMapping()
     public Film updateFilm(@RequestBody Film film) {
-        if (films.containsKey(film.getId())) {
-            Film checkedFilm = checkFilm(film);
-            films.put(film.getId(), checkedFilm);
-            log.info("Фильм обновлен: ", checkedFilm);
-            return checkedFilm;
-        } else {
-            log.warn("Такой фильм не существует.");
-            throw new ValidationException(HttpStatus.NOT_FOUND, "Такой фильм не существует.");
-        }
+        return filmService.updateFilm(checkFilm(film));
+    }
+
+    @PutMapping("/{id}/like/{userId}")
+    public void addLike(@PathVariable long id, @PathVariable long userId) {
+        filmService.addLike(id, userId);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public void removeLike(@PathVariable long id, @PathVariable long userId) {
+        filmService.removeLike(id, userId);
+    }
+
+    @GetMapping("/popular")
+    public Set<Film> getPopularFilm(@RequestParam(required = false) Integer count) {
+        return filmService.getPopularFilm(count);
     }
 
     public Film checkFilm(Film film) {
         if (film == null) {
-            throw new ValidationException(HttpStatus.BAD_REQUEST, "Не заполнены данные для создания фильма.");
+            throw new ValidationException("Не заполнены данные для создания фильма.");
         }
         if (film.getName() == null || film.getName().isBlank()) {
-            throw new ValidationException(HttpStatus.BAD_REQUEST, "Нет названия фильма.");
+            throw new ValidationException("Нет названия фильма.");
         }
         if (film.getDescription().length() > 200) {
-            throw new ValidationException(HttpStatus.BAD_REQUEST, "Описание фильма не дожно превышать 200 символов.");
+            throw new ValidationException("Описание фильма не дожно превышать 200 символов.");
         }
         LocalDate theEarliestFilm = LocalDate.parse("1895-12-28");
         if (film.getReleaseDate().isBefore(theEarliestFilm)) {
-            throw new ValidationException(HttpStatus.BAD_REQUEST, "Релиз фильма не может быть опубликован раньше 28.12.1895.");
+            throw new ValidationException("Релиз фильма не может быть опубликован раньше 28.12.1895.");
         }
         if (film.getDuration() <= 0) {
-            throw new ValidationException(HttpStatus.BAD_REQUEST, "Продолжительность фильма не может быть 0.");
+            throw new ValidationException("Продолжительность фильма не может быть 0.");
         }
         return film;
     }

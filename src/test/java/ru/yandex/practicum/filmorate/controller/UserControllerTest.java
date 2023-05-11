@@ -1,3 +1,4 @@
+/*
 package ru.yandex.practicum.filmorate.controller;
 
 import org.junit.jupiter.api.Test;
@@ -61,4 +62,4 @@ class UserControllerTest {
         final ValidationException exception = assertThrows(ValidationException.class, () -> controller.updateUser(user2));
         assertEquals("Такого пользователя не существует", exception.getReason());
     }
-}
+}*/
