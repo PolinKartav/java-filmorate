@@ -116,12 +116,12 @@ public class UserService {
             log.warn("Пользователя  с таким ID {} не существует!", friendId);
             throw new UserNotFoundException("Такого друга не существует");
         }
-        Set<User> userFriends = user.getFriends().stream().
-                map(userStorage::getUser)
+        Set<User> userFriends = user.getFriends().stream()
+                .map(userStorage::getUser)
                 .collect(Collectors.toSet());
 
-        Set<User> friendsFriends = friend.getFriends().stream().
-                map(t -> userStorage.getUser(t))
+        Set<User> friendsFriends = friend.getFriends().stream()
+                .map(t -> userStorage.getUser(t))
                 .collect(Collectors.toSet());
 
         userFriends.retainAll(friendsFriends);
