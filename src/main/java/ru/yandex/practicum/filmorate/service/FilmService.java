@@ -3,14 +3,12 @@ package ru.yandex.practicum.filmorate.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import ru.yandex.practicum.filmorate.validation.FilmAlreadyExistsException;
 import ru.yandex.practicum.filmorate.validation.FilmNotFoundException;
-import ru.yandex.practicum.filmorate.validation.ValidationException;
 
 import java.util.*;
 import java.util.stream.Collectors;
