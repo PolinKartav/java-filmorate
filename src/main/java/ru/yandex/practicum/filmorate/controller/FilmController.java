@@ -17,7 +17,6 @@ import java.util.Set;
 @RequestMapping("/films")
 public class FilmController {
     private static final Logger log = LoggerFactory.getLogger(FilmController.class);
-    private HashMap<Integer, Film> films = new HashMap<>();
     private final FilmService filmService;
 
     @Autowired
@@ -27,7 +26,7 @@ public class FilmController {
 
     @GetMapping()
     public List<Film> getAllFilms() {
-        log.debug("Текущее количество фильмов: {}", films.size());
+        log.debug("Текущее количество фильмов: {}", filmService.getAllFilms().size());
         return filmService.getAllFilms();
     }
 

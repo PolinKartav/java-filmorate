@@ -24,11 +24,10 @@ public class UserController {
         this.userService = userService;
     }
 
-    private HashMap<Long, User> users = new HashMap<>();
 
     @GetMapping()
     public List<User> getAllUsers() {
-        log.debug("Текущее количество пользователей: {}", users.size());
+        log.debug("Текущее количество пользователей: {}", userService.getAllUsers().size());
         return userService.getAllUsers();
     }
 
