@@ -20,12 +20,14 @@ public class InMemoryFilmStorage implements FilmStorage {
             return allFilms;
         }
     }
+
     @Override
     public Film getFilm(long filmId) {
         if (films.containsKey(filmId)) {
             return films.get(filmId);
         } else return null;
     }
+
     @Override
     public Film createFilm(Film film) {
         if (films.containsKey(film.getId())) {
@@ -37,6 +39,7 @@ public class InMemoryFilmStorage implements FilmStorage {
             return film;
         }
     }
+
     @Override
     public Film updateFilm(Film film) {
         if (films.containsKey(film.getId())) {
