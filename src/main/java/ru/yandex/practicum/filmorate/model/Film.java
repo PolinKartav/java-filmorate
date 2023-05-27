@@ -16,9 +16,10 @@ public class Film {
     private LocalDate releaseDate;
     private int duration;
     private Mpa mpa;
-    //private Set<Long> likes;
     private Set<Genre> genres;
+
     public Film(long id, String name, String description, LocalDate releaseDate, Integer duration, Mpa mpa) {
+        
         this.id = id;
         this.name = name;
         this.description = description;
@@ -26,7 +27,6 @@ public class Film {
         this.releaseDate = releaseDate;
         this.mpa = mpa;
         genres = new LinkedHashSet<>();
-       // likes = new LinkedHashSet<>();
     }
 
     public Map<String, Object> toMap() {
