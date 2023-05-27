@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.validation.ValidationException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -83,9 +83,6 @@ public class UserController {
         }
         if (user.getBirthday().isAfter(LocalDate.now())) {
             throw new ValidationException("Дата рожденья не может быть в будущем.");
-        }
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
         }
         return user;
     }

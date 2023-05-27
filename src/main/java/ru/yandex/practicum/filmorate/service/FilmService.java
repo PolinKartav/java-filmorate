@@ -2,16 +2,14 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
-import ru.yandex.practicum.filmorate.validation.FilmAlreadyExistsException;
-import ru.yandex.practicum.filmorate.validation.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.exception.FilmAlreadyExistsException;
+import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class FilmService {
@@ -19,7 +17,6 @@ public class FilmService {
     private final UserStorage userStorage;
     private static final Logger log = LoggerFactory.getLogger(FilmService.class);
 
-    @Autowired
     public FilmService(FilmStorage filmStorage, UserStorage userStorage) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
@@ -27,7 +24,6 @@ public class FilmService {
 
     public Film getFilm(long filmId) {
         if (filmStorage.getFilm(filmId) != null) {
-            log.info("Фильм по ID : {}", filmStorage.getFilm(filmId));
             return filmStorage.getFilm(filmId);
         } else log.warn("Фильма  не существует!");
         throw new FilmNotFoundException("Фильма не существует!");
@@ -35,7 +31,6 @@ public class FilmService {
 
     public List<Film> getAllFilms() {
         if (filmStorage.getAllFilms() != null) {
-            log.info("Список фильмов : {}", filmStorage.getAllFilms(), "!");
             return filmStorage.getAllFilms();
         } else log.warn("Список фильмов пуст!");
         return new ArrayList<>();
@@ -69,19 +64,15 @@ public class FilmService {
             log.warn("Пользователя  с таким ID {} не существует!", userId);
             throw new FilmAlreadyExistsException("Пользователя  с таким ID {} не существует!");
         }
-        filmStorage.getFilm(filmId).getLikes().add(userId);
+        filmStorage.addLike(filmId, userId);
     }
 
     //Метод выводит 10 самых популярных фильмов.
-    public Set<Film> getPopularFilm(Integer count) {
+    public List<Film> getPopularFilm(Integer count) {
         if (count == null) {
             count = 10;
         }
-        return filmStorage.getAllFilms()
-                .stream()
-                .sorted(Collections.reverseOrder(Comparator.comparingInt(film -> film.getLikes().size())))
-                .limit(count)
-                .collect(Collectors.toSet());
+        return filmStorage.getPopularFilms(count);
     }
 
     //Метод удаляет пользовательский лайк у фильма.
@@ -94,6 +85,6 @@ public class FilmService {
             log.warn("Пользователя  с таким ID не существует!");
             throw new FilmNotFoundException("Пользователя  с таким ID не существует!");
         }
-        filmStorage.getFilm(filmId).getLikes().remove(userId);
+        filmStorage.removeLike(filmId, userId);
     }
 }
