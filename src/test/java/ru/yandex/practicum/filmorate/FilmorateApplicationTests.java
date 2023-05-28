@@ -129,7 +129,7 @@ class FilmorateApplicationTests {
     }
 
     @Test
-    void testGetAllFilms(){
+    void testGetAllFilms() {
         filmStorage.createFilm(film1);
         filmStorage.createFilm(film2);
         List<Film> films = new ArrayList<>();
