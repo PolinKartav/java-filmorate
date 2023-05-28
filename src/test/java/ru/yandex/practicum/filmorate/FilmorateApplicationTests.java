@@ -18,6 +18,7 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
@@ -61,7 +62,7 @@ class FilmorateApplicationTests {
     }
 
     @Test
-    void testCreateUser(){
+    void testCreateUser() {
         User user = new User(1L,
                 "email@email.ru",
                 "HuGo",
@@ -71,7 +72,7 @@ class FilmorateApplicationTests {
     }
 
     @Test
-    void testGetUserById(){
+    void testGetUserById() {
         userStorage.createUser(user1);
         userStorage.createUser(user2);
         assertEquals(user1, userStorage.getUser(1));
@@ -79,7 +80,7 @@ class FilmorateApplicationTests {
     }
 
     @Test
-    void testGetAllUsers(){
+    void testGetAllUsers() {
         userStorage.createUser(user1);
         userStorage.createUser(user2);
         List<User> users = new ArrayList<>();
@@ -89,7 +90,7 @@ class FilmorateApplicationTests {
     }
 
     @Test
-    void testUpdateUser(){
+    void testUpdateUser() {
         userStorage.createUser(user1);
         User user = new User(1L,
                 "hugo@yandex.com",
@@ -99,54 +100,56 @@ class FilmorateApplicationTests {
         assertEquals(user, userStorage.updateUser(user));
     }
 
-   @Test
-   void testGetFriends(){
-       userStorage.createUser(user1);
-       userStorage.createUser(user2);
-       userStorage.addFriend(user1.getId(), user2.getId());
+    @Test
+    void testGetFriends() {
+        userStorage.createUser(user1);
+        userStorage.createUser(user2);
+        userStorage.addFriend(user1.getId(), user2.getId());
 
-       List<User> friends = new ArrayList<>();
-       friends.add(user2);
-       assertEquals(friends, userStorage.getFriends(user1.getId()));
-   }
+        List<User> friends = new ArrayList<>();
+        friends.add(user2);
+        assertEquals(friends, userStorage.getFriends(user1.getId()));
+    }
 
-  @Test
-   void testCreateFilm(){
-        Film film = new  Film(3L,
-               "HarryPotter",
-               "The boy who survived came to die.",
-               LocalDate.of(2000, 3, 12),
-               152,
-               Mpa.G);
+    @Test
+    void testCreateFilm() {
+        Film film = new Film(3L,
+                "HarryPotter",
+                "The boy who survived came to die.",
+                LocalDate.of(2000, 3, 12),
+                152,
+                Mpa.G);
         assertEquals(film.getClass(), filmStorage.createFilm(film).getClass());
-   }
+    }
 
-   @Test
-   void testGetFilmById(){
-       filmStorage.createFilm(film1);
-       assertEquals(film1.getClass(), filmStorage.getFilm(1).getClass());
-   }
-   @Test
-   void testUpdateFilm(){
+    @Test
+    void testGetFilmById() {
         filmStorage.createFilm(film1);
-       Film film = new  Film(1L,
-               "HarryPotter",
-               "The boy who survived came to die.",
-               LocalDate.of(2001, 3, 12),
-               152,
-               Mpa.G);
-       assertEquals(film.getClass(), filmStorage.updateFilm(film).getClass());
-   }
+        assertEquals(film1.getClass(), filmStorage.getFilm(1).getClass());
+    }
 
-   @Test
-   void testGetPopularFilms(){
-       filmStorage.createFilm(film1);
-       filmStorage.createFilm(film2);
-       List<Film> films = new ArrayList<>();
-       films.add(film1);
-       films.add(film2);
-       assertEquals(films.getClass(), filmStorage.getPopularFilms(2).getClass());
-   }
+    @Test
+    void testUpdateFilm() {
+        filmStorage.createFilm(film1);
+        Film film = new Film(1L,
+                "HarryPotter",
+                "The boy who survived came to die.",
+                LocalDate.of(2001, 3, 12),
+                152,
+                Mpa.G);
+        assertEquals(film.getClass(), filmStorage.updateFilm(film).getClass());
+    }
+
+    @Test
+    void testGetPopularFilms() {
+        filmStorage.createFilm(film1);
+        filmStorage.createFilm(film2);
+        List<Film> films = new ArrayList<>();
+        films.add(film1);
+        films.add(film2);
+        assertEquals(films.getClass(), filmStorage.getPopularFilms(2).getClass());
+    }
+
     @Test
     void testGetGenreById() {
         assertEquals(genreStorage.getGenre(1).orElse(null), Genre.COMEDY);
@@ -158,7 +161,7 @@ class FilmorateApplicationTests {
     }
 
     @Test
-    void testGetAllGenres(){
+    void testGetAllGenres() {
         assertEquals(6, genreStorage.getAllGenres().size());
     }
 
@@ -170,8 +173,9 @@ class FilmorateApplicationTests {
         assertEquals(mpaStorage.getMpa(4).orElse(null), Mpa.R);
         assertEquals(mpaStorage.getMpa(5).orElse(null), Mpa.NC17);
     }
+
     @Test
-    void testGetAllMaps(){
+    void testGetAllMaps() {
         assertEquals(5, mpaStorage.getAllMpa().size());
     }
 }
