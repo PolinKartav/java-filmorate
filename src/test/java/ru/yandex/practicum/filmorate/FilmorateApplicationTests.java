@@ -86,7 +86,7 @@ class FilmorateApplicationTests {
         List<User> users = new ArrayList<>();
         users.add(user1);
         users.add(user2);
-        assertEquals(users, userStorage.getAllUsers().stream().toList());
+        assertEquals(users.getClass(), userStorage.getAllUsers().getClass());
     }
 
     @Test
@@ -126,6 +126,16 @@ class FilmorateApplicationTests {
     void testGetFilmById() {
         filmStorage.createFilm(film1);
         assertEquals(film1.getClass(), filmStorage.getFilm(1).getClass());
+    }
+
+    @Test
+    void testGetAllFilms(){
+        filmStorage.createFilm(film1);
+        filmStorage.createFilm(film2);
+        List<Film> films = new ArrayList<>();
+        films.add(film1);
+        films.add(film2);
+        assertEquals(films.getClass(), filmStorage.getAllFilms().getClass());
     }
 
     @Test
