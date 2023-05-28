@@ -12,6 +12,7 @@ public interface FilmStorage {
     Film createFilm(Film film);
 
     Film updateFilm(Film film);
+
     List<Film> getPopularFilms(int count);
 
     void addLike(long filmId, long userId);
