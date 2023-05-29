@@ -22,7 +22,7 @@ public class UserService {
     }
 
     public List<User> getAllUsers() {
-        if (userStorage.getAllUsers() != null) {
+        if (!userStorage.getAllUsers().isEmpty()) {
             log.info("Список пользователей: {}", userStorage.getAllUsers());
             return userStorage.getAllUsers();
         } else log.warn("Список пользователей пуст!");
@@ -30,79 +30,58 @@ public class UserService {
     }
 
     public User getUser(long userId) {
-        if (userStorage.getUser(userId) != null) {
-            log.info("Пользователь с ID {} : ", userId);
-            return userStorage.getUser(userId);
-        } else log.warn("Такого пользователя не существует");
-        throw new UserNotFoundException("Такого пользователя не существует");
+        return userStorage.getUser(userId).orElseThrow(() ->
+                new UserNotFoundException("Такого пользователя не существует"));
     }
 
     public User createUser(User user) {
         normalizeUser(user);
-        User newUser = userStorage.createUser(user);
-        if (newUser != null) {
-            log.info("Пользователь создан: {}", user);
-            return newUser;
-        } else {
-            log.warn("Пользователь уже существует");
-        }
-        throw new UserAlreadyExistsException("Пользователь уже существует");
+        User newUser = userStorage.createUser(user).orElseThrow(() ->
+                new UserAlreadyExistsException("Пользователь уже существует"));
+        log.info("Пользователь создан: {}", user);
+        return newUser;
     }
 
     public User updateUser(User user) {
         normalizeUser(user);
-        if (userStorage.getUser(user.getId()) == null) {
-            throw new UserNotFoundException(String.format("Пользователь с ID = %s не существует", user.getId()));
-        }
-        User newUser = userStorage.updateUser(user);
+        userStorage.getUser(user.getId()).orElseThrow(() ->
+                new UserNotFoundException(String.format("Пользователь с ID = %s не существует", user.getId())));
+
+        User newUser = userStorage.updateUser(user).get();
         log.info("Пользователь обновлен: {}", user);
         return newUser;
     }
 
     public void addFriend(long userId, long friendId) {
-        if (userStorage.getUser(userId) == null) {
-            log.warn("Такого пользователя не существует");
-            throw new UserNotFoundException("Такого пользователя не существует");
-        }
-        if (userStorage.getUser(friendId) == null) {
-            log.warn("Такого пользователя не существует");
-            throw new UserNotFoundException("Такого друга не существует");
-        }
+        userStorage.getUser(userId).orElseThrow(() ->
+                new UserNotFoundException("Такого пользователя не существует"));
+
+        userStorage.getUser(friendId).orElseThrow(() ->
+                new UserNotFoundException("Такого друга не существует"));
+
         userStorage.addFriend(userId, friendId);
     }
 
     public void removeFriend(long userId, long friendId) {
-        User user = userStorage.getUser(userId);
-        User friend = userStorage.getUser(friendId);
-        if (user == null) {
-            log.warn("Такого пользователя не существует");
-            throw new UserNotFoundException("Такого пользователя не существует");
-        }
-        if (friend == null) {
-            log.warn("Такого пользователя не существует");
-            throw new UserNotFoundException("Такого друга не существует");
-        }
+        userStorage.getUser(userId).orElseThrow(() ->
+                new UserNotFoundException("Такого пользователя не существует"));
+        userStorage.getUser(friendId).orElseThrow(() ->
+                new UserNotFoundException("Такого друга не существует"));
         userStorage.removeFriend(userId, friendId);
     }
 
     public List<User> getFriends(@PathVariable("id") long id) {
-        User user = userStorage.getUser(id);
-        if (user == null) {
-            log.warn("Пользователя  с таким ID {} не существует!", id);
-            throw new UserNotFoundException("Такого пользователя не существует");
-        }
+        userStorage.getUser(id).orElseThrow(() ->
+                new UserNotFoundException("Такого пользователя не существует"));
         return userStorage.getFriends(id);
     }
 
     public List<User> getCommonFriends(long userId, long friendId) {
-        if (userStorage.getUser(userId) == null) {
-            log.warn("Пользователя  с таким ID {} не существует!", userId);
-            throw new UserNotFoundException("Такого пользователя не существует");
-        }
-        if (userStorage.getUser(friendId) == null) {
-            log.warn("Пользователя  с таким ID {} не существует!", friendId);
-            throw new UserNotFoundException("Такого друга не существует");
-        }
+        userStorage.getUser(userId).orElseThrow(() ->
+                new UserNotFoundException("Такого пользователя не существует"));
+        userStorage.getUser(friendId).orElseThrow(() ->
+                new UserNotFoundException("Такого друга не существует"));
+
         List<User> userFriends = userStorage.getFriends(userId);
 
         List<User> friendFriends = userStorage.getFriends(friendId);

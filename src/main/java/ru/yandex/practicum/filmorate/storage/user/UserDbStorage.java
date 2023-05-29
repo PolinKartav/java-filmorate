@@ -6,12 +6,10 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Repository
 public class UserDbStorage implements UserStorage {
@@ -23,6 +21,7 @@ public class UserDbStorage implements UserStorage {
     }
 
     @Override
+    @Transactional
     public List<User> getAllUsers() {
         String sqlQueryGetAllUsers = "SELECT * FROM USERS ORDER BY USER_ID";
         return jdbcTemplate.query(sqlQueryGetAllUsers, this::mapRowToUser);
@@ -30,18 +29,18 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     @Transactional
-    public User getUser(long userId) {
+    public Optional<User> getUser(long userId) {
         String sqlQueryGetUser = "select * from USERS where user_id = ?";
         try {
-            return jdbcTemplate.queryForObject(sqlQueryGetUser, this::mapRowToUser, userId);
+            return Optional.of(jdbcTemplate.queryForObject(sqlQueryGetUser, this::mapRowToUser, userId));
         } catch (DataAccessException e) {
-            return null;
+            return Optional.empty();
         }
     }
 
     @Override
     @Transactional
-    public User createUser(User user) throws ValidationException {
+    public Optional<User> createUser(User user) {
         SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
                 .withTableName("USERS")
                 .usingGeneratedKeyColumns("USER_ID");
@@ -50,7 +49,7 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     @Transactional
-    public User updateUser(User user) {
+    public Optional<User> updateUser(User user) {
         String sqlQueryUpdateUser = "update USERS " +
                 "set USER_NAME = ?," +
                 "USER_LOGIN = ?," +
@@ -58,26 +57,34 @@ public class UserDbStorage implements UserStorage {
                 "USER_BIRTHDAY = ?" +
                 "where USER_ID = ?";
         try {
-            jdbcTemplate.update(sqlQueryUpdateUser,
+
+           jdbcTemplate.update(sqlQueryUpdateUser,
                     user.getName(),
                     user.getLogin(),
                     user.getEmail(),
                     user.getBirthday(),
                     user.getId());
         } catch (DataAccessException e) {
-            return null;
+            return Optional.empty();
         }
+
         return getUser(user.getId());
     }
 
     @Override
+    @Transactional
     public void addFriend(long userId, long friendId) {
-        String sqlQueryAddFriend = "insert into USER_FRIENDS (USER_ID, FRIEND_ID) " +
-                " values ( ?, ? )";
-        jdbcTemplate.update(sqlQueryAddFriend, userId, friendId);
+        SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
+                .withTableName("USER_FRIENDS");
+        Map<String, Long> parameters = new HashMap<>();
+        parameters.put("USER_ID", userId);
+        parameters.put("FRIEND_ID", friendId);
+
+        simpleJdbcInsert.execute(parameters);
     }
 
     @Override
+    @Transactional
     public void removeFriend(long userId, long friendId) {
         String sqlQueryDeleteFriend = "delete from USER_FRIENDS " +
                 "where USER_ID = ? and FRIEND_ID = ?";
@@ -85,14 +92,15 @@ public class UserDbStorage implements UserStorage {
     }
 
     @Override
+    @Transactional
     public List<User> getFriends(long userId) {
-        String sqlQueryGetFriends = "select U.USER_ID as user_id,\n" +
-                "       U.USER_NAME as user_name,\n" +
-                "       U.USER_EMAIL as user_email,\n" +
-                "       U.USER_BIRTHDAY as user_birthday,\n" +
-                "       U.USER_LOGIN as user_login\n" +
-                "from USERS as U\n" +
-                "inner join USER_FRIENDS as UF on U.USER_ID = UF.FRIEND_ID\n" +
+        String sqlQueryGetFriends = "select U.USER_ID as user_id," +
+                "       U.USER_NAME as user_name," +
+                "       U.USER_EMAIL as user_email," +
+                "       U.USER_BIRTHDAY as user_birthday," +
+                "       U.USER_LOGIN as user_login " +
+                "from USERS as U " +
+                "inner join USER_FRIENDS as UF on U.USER_ID = UF.FRIEND_ID " +
                 "where UF.USER_ID = ?";
         return jdbcTemplate.query(sqlQueryGetFriends, this::mapRowToUser, userId);
     }

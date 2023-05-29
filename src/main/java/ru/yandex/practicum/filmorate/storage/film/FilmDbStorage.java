@@ -26,18 +26,20 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
+    @Transactional
     public List<Film> getAllFilms() {
-        String sqlQueryGetAllFilms = "select * from FILMS " +
+        String sqlQueryGetAllFilms = "select FILM_ID, FILM_NAME, FILM_DESCRIPTION, FILM_RELEASE_DATE, " +
+                "FILM_DURATION, FILMS.RATING_ID, RATING_NAME from FILMS " +
                 "left join RATING on FILMS.RATING_ID = RATING.RATING_ID " +
                 "order by FILM_ID ";
         List<Film> films = jdbcTemplate.query(sqlQueryGetAllFilms, this::mapRowToFilm);
         Map<Long, Film> mapFilms = films.stream().collect(Collectors.toMap(Film::getId, Function.identity()));
-        String sqlQueryGetAllGenres = "select FG.FILM_ID as filmId,\n" +
-                "       G2.GENRE_NAME as genreName,\n" +
-                "       G2.GENRE_ID as genreId\n" +
-                "from FILMS_GENRES FG\n" +
-                "    left join GENRE G2 on FG.GENRE_ID = G2.GENRE_ID\n" +
-                "order by genreId\n";
+        String sqlQueryGetAllGenres = "select FG.FILM_ID as filmId," +
+                "       G2.GENRE_NAME as genreName," +
+                "       G2.GENRE_ID as genreId " +
+                "from FILMS_GENRES FG " +
+                "    left join GENRE G2 on FG.GENRE_ID = G2.GENRE_ID " +
+                "order by genreId ";
         List<Map<String, Object>> genres = jdbcTemplate.queryForList(sqlQueryGetAllGenres);
         genres.forEach(t -> mapFilms.get(Long.parseLong(t.get("filmId").toString()))
                 .getGenres()
@@ -48,7 +50,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     @Transactional
-    public Film getFilm(long filmId) {
+    public Optional<Film> getFilm(long filmId) {
         String sqlQueryGetFilm = "select * from films " +
                 "left join RATING on FILMS.RATING_ID = RATING.RATING_ID " +
                 "where FILM_ID = ?";
@@ -56,29 +58,29 @@ public class FilmDbStorage implements FilmStorage {
         try {
             film = jdbcTemplate.queryForObject(sqlQueryGetFilm, this::mapRowToFilm, filmId);
         } catch (DataAccessException e) {
-            return null;
+            return Optional.empty();
         }
         assert film != null;
-        String sqlQueryGetGenres = "select GENRE_NAME as genre\n" +
-                "from FILMS_GENRES FG\n" +
-                "         left join GENRE G on G.GENRE_ID = FG.GENRE_ID\n" +
-                "where FILM_ID = ?\n" +
+        String sqlQueryGetGenres = "select GENRE_NAME as genre " +
+                "from FILMS_GENRES FG " +
+                "         left join GENRE G on G.GENRE_ID = FG.GENRE_ID " +
+                "where FILM_ID = ? " +
                 "order by G.GENRE_ID";
         List<Genre> genresFilms = jdbcTemplate.query(sqlQueryGetGenres, this::mapRowToGenre, filmId);
         film.setGenres(new LinkedHashSet<>(genresFilms));
-        return film;
+        return Optional.of(film);
     }
 
     @Override
     @Transactional
-    public Film createFilm(Film film) {
+    public Optional<Film> createFilm(Film film) {
         SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
                 .withTableName("FILMS")
                 .usingGeneratedKeyColumns("FILM_ID");
 
         long filmId = simpleJdbcInsert.executeAndReturnKey(film.toMap()).longValue();
 
-        String sqlQueryAddGenres = "insert into FILMS_GENRES (FILM_ID, GENRE_ID)\n" +
+        String sqlQueryAddGenres = "insert into FILMS_GENRES (FILM_ID, GENRE_ID) " +
                 "values (?, ?)";
 
         List<Genre> genres = new ArrayList<>(film.getGenres());
@@ -99,7 +101,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     @Transactional
-    public Film updateFilm(Film film) {
+    public Optional<Film> updateFilm(Film film) {
         String sqlQueryUpdateFilm = "update FILMS " +
                 "set FILM_NAME = ?," +
                 "FILM_DESCRIPTION = ?," +
@@ -116,15 +118,15 @@ public class FilmDbStorage implements FilmStorage {
                     film.getMpa().getId(),
                     film.getId());
         } catch (DataAccessException e) {
-            return null;
+            return Optional.empty();
         }
 
-        String sqlQueryDeleteGenres = "delete from FILMS_GENRES\n" +
+        String sqlQueryDeleteGenres = "delete from FILMS_GENRES " +
                 "where FILM_ID = ?";
 
         jdbcTemplate.update(sqlQueryDeleteGenres, film.getId());
 
-        String sqlQueryAddGenres = "insert into FILMS_GENRES (FILM_ID, GENRE_ID)\n" +
+        String sqlQueryAddGenres = "insert into FILMS_GENRES (FILM_ID, GENRE_ID)" +
                 "values (?, ?)";
 
         List<Genre> genres = new ArrayList<>(film.getGenres());
@@ -145,33 +147,34 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
+    @Transactional
     public List<Film> getPopularFilms(int count) {
-        String sqlQueryGetPopularFilms = "select F.FILM_ID as film_id,\n" +
-                "       FILM_DESCRIPTION as film_description,\n" +
-                "       FILM_NAME as film_name,\n" +
-                "       FILM_RELEASE_DATE as film_release_date,\n" +
-                "       FILM_DURATION as film_duration,\n" +
-                "       R.RATING_NAME as rating_name\n" +
-                "from FILMS F\n" +
-                "left join FILM_LIKES FL on FL.FILM_ID = F.FILM_ID\n" +
-                "left join RATING R on R.RATING_ID = F.RATING_ID\n" +
+        String sqlQueryGetPopularFilms = "select F.FILM_ID as film_id," +
+                "       FILM_DESCRIPTION as film_description," +
+                "       FILM_NAME as film_name," +
+                "       FILM_RELEASE_DATE as film_release_date," +
+                "       FILM_DURATION as film_duration," +
+                "       R.RATING_NAME as rating_name " +
+                "from FILMS F " +
+                "left join FILM_LIKES FL on FL.FILM_ID = F.FILM_ID " +
+                "left join RATING R on R.RATING_ID = F.RATING_ID " +
                 "group by F.FILM_ID, " +
                 "   FILM_DESCRIPTION, " +
                 "   FILM_NAME, " +
                 "   FILM_RELEASE_DATE, " +
                 "   FILM_DURATION, " +
-                "   R.RATING_NAME\n" +
-                "order by count(FL.USER_ID) desc\n" +
+                "   R.RATING_NAME " +
+                "order by count(FL.USER_ID) desc " +
                 "limit ?";
         List<Film> films = jdbcTemplate.query(sqlQueryGetPopularFilms, this::mapRowToFilm, count);
         if (!films.isEmpty()) {
             Map<Long, Film> mapFilms = films.stream().collect(Collectors.toMap(Film::getId, Function.identity()));
-            String sqlQueryGetAllGenres = "select FG.FILM_ID as filmId,\n" +
-                    "       G2.GENRE_NAME as genreName,\n" +
-                    "       G2.GENRE_ID as genreId\n" +
-                    "from FILMS_GENRES FG\n" +
-                    "    left join GENRE G2 on FG.GENRE_ID = G2.GENRE_ID\n" +
-                    "order by genreId\n";
+            String sqlQueryGetAllGenres = "select FG.FILM_ID as filmId," +
+                    "       G2.GENRE_NAME as genreName," +
+                    "       G2.GENRE_ID as genreId " +
+                    "from FILMS_GENRES FG " +
+                    "    left join GENRE G2 on FG.GENRE_ID = G2.GENRE_ID " +
+                    "order by genreId ";
             List<Map<String, Object>> genres = jdbcTemplate.queryForList(sqlQueryGetAllGenres);
             genres.forEach(t -> mapFilms.get(Long.parseLong(t.get("filmId").toString()))
                     .getGenres()
@@ -183,6 +186,7 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
+    @Transactional
     public void addLike(long filmId, long userId) {
         String sqlQueryAddLikeToFilm = "insert into FILM_LIKES (FILM_ID, USER_ID) \n" +
                 "values (?, ?)";
@@ -191,6 +195,7 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
+    @Transactional
     public void removeLike(long filmId, long userId) {
         String sqlQueryRemoveLikeFromFilm = "delete from FILM_LIKES\n" +
                 "where FILM_ID = ? AND USER_ID = ?";

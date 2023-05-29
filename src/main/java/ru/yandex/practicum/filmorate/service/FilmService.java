@@ -23,51 +23,39 @@ public class FilmService {
     }
 
     public Film getFilm(long filmId) {
-        if (filmStorage.getFilm(filmId) != null) {
-            return filmStorage.getFilm(filmId);
-        } else log.warn("Фильма  не существует!");
-        throw new FilmNotFoundException("Фильма не существует!");
+        return filmStorage.getFilm(filmId).orElseThrow(() ->
+                new FilmNotFoundException("Фильма не существует!"));
     }
 
     public List<Film> getAllFilms() {
-        if (filmStorage.getAllFilms() != null) {
+        if (!filmStorage.getAllFilms().isEmpty()) {
             return filmStorage.getAllFilms();
         } else log.warn("Список фильмов пуст!");
         return new ArrayList<>();
     }
 
     public Film createFilm(Film film) {
-        Film newFilm = filmStorage.createFilm(film);
-        if (newFilm != null) {
-            log.info("Фильм создан: {}", film);
-            return newFilm;
-        } else log.warn("Такой фильм уже существует.");
-        throw new FilmAlreadyExistsException("Такой фильм уже существует.");
+        Film newFilm = filmStorage.createFilm(film).orElseThrow(() ->
+                new FilmAlreadyExistsException("Такой фильм уже существует."));
+        log.info("Фильм создан: {}", film);
+        return newFilm;
     }
 
     public Film updateFilm(Film film) {
-        Film newFilm = filmStorage.updateFilm(film);
-        if (newFilm != null) {
-            log.info("Фильм обновлен: {}", film);
-            return newFilm;
-        } else log.warn("Такой фильм не существует.");
-        throw new FilmNotFoundException("Такой фильм не существует.");
+        Film newFilm = filmStorage.updateFilm(film).orElseThrow(() ->
+                new FilmNotFoundException("Такой фильм не существует."));
+        log.info("Фильм обновлен: {}", film);
+        return newFilm;
     }
 
-    //Метод добавляет пользовательский лайк фильму.
     public void addLike(long filmId, long userId) {
-        if (filmStorage.getFilm(filmId) == null) {
-            log.warn("Фильм с таким ID {} не существует.", filmId);
-            throw new FilmAlreadyExistsException("Фильм с таким ID {} не существует.");
-        }
-        if (userStorage.getUser(userId) == null) {
-            log.warn("Пользователя  с таким ID {} не существует!", userId);
-            throw new FilmAlreadyExistsException("Пользователя  с таким ID {} не существует!");
-        }
+        filmStorage.getFilm(filmId).orElseThrow(() ->
+                new FilmAlreadyExistsException("Фильм с таким ID {} не существует."));
+        userStorage.getUser(userId).orElseThrow(() ->
+                new FilmAlreadyExistsException("Пользователя  с таким ID {} не существует!"));
         filmStorage.addLike(filmId, userId);
     }
 
-    //Метод выводит 10 самых популярных фильмов.
     public List<Film> getPopularFilm(Integer count) {
         if (count == null) {
             count = 10;
@@ -75,16 +63,11 @@ public class FilmService {
         return filmStorage.getPopularFilms(count);
     }
 
-    //Метод удаляет пользовательский лайк у фильма.
     public void removeLike(long filmId, long userId) {
-        if (filmStorage.getFilm(filmId) == null) {
-            log.warn("Фильм с таким ID  не существует.");
-            throw new FilmNotFoundException("Фильм с таким ID  не существует.");
-        }
-        if (userStorage.getUser(userId) == null) {
-            log.warn("Пользователя  с таким ID не существует!");
-            throw new FilmNotFoundException("Пользователя  с таким ID не существует!");
-        }
+        filmStorage.getFilm(filmId).orElseThrow(() ->
+                new FilmNotFoundException("Фильм с таким ID  не существует."));
+        userStorage.getUser(userId).orElseThrow(() ->
+                new FilmNotFoundException("Пользователя  с таким ID не существует!"));
         filmStorage.removeLike(filmId, userId);
     }
 }
