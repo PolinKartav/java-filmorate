@@ -18,6 +18,7 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -68,15 +69,15 @@ class FilmorateApplicationTests {
                 "HuGo",
                 "Hugo",
                 LocalDate.of(1990, 12, 12));
-        assertEquals(user1, userStorage.createUser(user));
+        assertEquals(user1, userStorage.createUser(user).get());
     }
 
     @Test
     void testGetUserById() {
         userStorage.createUser(user1);
         userStorage.createUser(user2);
-        assertEquals(user1, userStorage.getUser(1));
-        assertEquals(user2, userStorage.getUser(2));
+        assertEquals(user1, userStorage.getUser(1).get());
+        assertEquals(user2, userStorage.getUser(2).get());
     }
 
     @Test
@@ -97,7 +98,7 @@ class FilmorateApplicationTests {
                 "HuGo",
                 "Hugo",
                 LocalDate.of(1990, 12, 12));
-        assertEquals(user, userStorage.updateUser(user));
+        assertEquals(user, userStorage.updateUser(user).get());
     }
 
     @Test
@@ -119,13 +120,13 @@ class FilmorateApplicationTests {
                 LocalDate.of(2000, 3, 12),
                 152,
                 Mpa.G);
-        assertEquals(film.getClass(), filmStorage.createFilm(film).getClass());
+        assertEquals(film.getClass(), filmStorage.createFilm(film).get().getClass());
     }
 
     @Test
     void testGetFilmById() {
         filmStorage.createFilm(film1);
-        assertEquals(film1.getClass(), filmStorage.getFilm(1).getClass());
+        assertEquals(film1.getClass(), filmStorage.getFilm(1).get().getClass());
     }
 
     @Test
@@ -147,7 +148,7 @@ class FilmorateApplicationTests {
                 LocalDate.of(2001, 3, 12),
                 152,
                 Mpa.G);
-        assertEquals(film.getClass(), filmStorage.updateFilm(film).getClass());
+        assertEquals(film.getClass(), filmStorage.updateFilm(film).get().getClass());
     }
 
     @Test
