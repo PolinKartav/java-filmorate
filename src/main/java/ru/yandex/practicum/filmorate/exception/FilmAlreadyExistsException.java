@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.validation;
+package ru.yandex.practicum.filmorate.exception;
 
 public class FilmAlreadyExistsException extends RuntimeException {
     public FilmAlreadyExistsException(String message) {

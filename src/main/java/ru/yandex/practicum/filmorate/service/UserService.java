@@ -2,13 +2,12 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
-import ru.yandex.practicum.filmorate.validation.UserAlreadyExistsException;
-import ru.yandex.practicum.filmorate.validation.UserNotFoundException;
+import ru.yandex.practicum.filmorate.exception.UserAlreadyExistsException;
+import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -18,13 +17,12 @@ public class UserService {
     private final UserStorage userStorage;
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
-    @Autowired
     public UserService(UserStorage userStorage) {
         this.userStorage = userStorage;
     }
 
     public List<User> getAllUsers() {
-        if (userStorage.getAllUsers() != null) {
+        if (!userStorage.getAllUsers().isEmpty()) {
             log.info("Список пользователей: {}", userStorage.getAllUsers());
             return userStorage.getAllUsers();
         } else log.warn("Список пользователей пуст!");
@@ -32,102 +30,74 @@ public class UserService {
     }
 
     public User getUser(long userId) {
-        if (userStorage.getUser(userId) != null) {
-            log.info("Пользователь с ID {} : ", userId);
-            return userStorage.getUser(userId);
-        } else log.warn("Такого пользователя не существует");
-        throw new UserNotFoundException("Такого пользователя не существует");
+        return userStorage.getUser(userId).orElseThrow(() ->
+                new UserNotFoundException("Такого пользователя не существует"));
     }
 
-    //Метод создания пользователя.
     public User createUser(User user) {
-        User newUser = userStorage.createUser(user);
-        if (newUser != null) {
-            log.info("Пользователь создан: {}", user);
-            return newUser;
-        } else log.warn("Пользователь уже существует");
-        throw new UserAlreadyExistsException("Пользователь уже существует");
-
+        normalizeUser(user);
+        User newUser = userStorage.createUser(user).orElseThrow(() ->
+                new UserAlreadyExistsException("Пользователь уже существует"));
+        log.info("Пользователь создан: {}", user);
+        return newUser;
     }
 
-    //Метод обновления пользователя.
     public User updateUser(User user) {
-        User newUser = userStorage.updateUser(user);
-        if (newUser != null) {
-            log.info("Пользователь обновлен: {}", user);
-            return newUser;
-        } else log.warn("Такого пользователя не существует");
-        throw new UserNotFoundException("Такого пользователя не существует");
+        normalizeUser(user);
+        userStorage.getUser(user.getId()).orElseThrow(() ->
+                new UserNotFoundException(String.format("Пользователь с ID = %s не существует", user.getId())));
+
+        User newUser = userStorage.updateUser(user).get();
+        log.info("Пользователь обновлен: {}", user);
+        return newUser;
     }
 
-    //Метод добавляет пользователю в друзей друга.
     public void addFriend(long userId, long friendId) {
-        if (userStorage.getUser(userId) == null) {
-            log.warn("Такого пользователя не существует");
-            throw new UserNotFoundException("Такого пользователя не существует");
-        }
-        if (userStorage.getUser(friendId) == null) {
-            log.warn("Такого пользователя не существует");
-            throw new UserNotFoundException("Такого друга не существует");
-        }
+        userStorage.getUser(userId).orElseThrow(() ->
+                new UserNotFoundException("Такого пользователя не существует"));
 
-        User user = userStorage.getUser(userId);
-        User friend = userStorage.getUser(friendId);
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
+        userStorage.getUser(friendId).orElseThrow(() ->
+                new UserNotFoundException("Такого друга не существует"));
+
+        userStorage.addFriend(userId, friendId);
     }
 
-    //Метод удаляет друга из друзей пользователя.
     public void removeFriend(long userId, long friendId) {
-        User user = userStorage.getUser(userId);
-        User friend = userStorage.getUser(friendId);
-        if (user == null) {
-            log.warn("Такого пользователя не существует");
-            throw new UserNotFoundException("Такого пользователя не существует");
-        }
-        if (friend == null) {
-            log.warn("Такого пользователя не существует");
-            throw new UserNotFoundException("Такого друга не существует");
-        }
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(userId);
+        userStorage.getUser(userId).orElseThrow(() ->
+                new UserNotFoundException("Такого пользователя не существует"));
+        userStorage.getUser(friendId).orElseThrow(() ->
+                new UserNotFoundException("Такого друга не существует"));
+        userStorage.removeFriend(userId, friendId);
     }
 
     public List<User> getFriends(@PathVariable("id") long id) {
-        User user = userStorage.getUser(id);
-        if (user == null) {
-            log.warn("Пользователя  с таким ID {} не существует!", id);
-            throw new UserNotFoundException("Такого пользователя не существует");
-        }
-        return user.getFriends().stream()
-                .map(userStorage::getUser)
-                .collect(Collectors.toList());
+        userStorage.getUser(id).orElseThrow(() ->
+                new UserNotFoundException("Такого пользователя не существует"));
+        return userStorage.getFriends(id);
     }
 
-    //Метод возвращает коллекцию общих друзей между одним пользователем и другим.
     public List<User> getCommonFriends(long userId, long friendId) {
-        User user = userStorage.getUser(userId);
-        User friend = userStorage.getUser(friendId);
-        if (user == null) {
-            log.warn("Пользователя  с таким ID {} не существует!", userId);
-            throw new UserNotFoundException("Такого пользователя не существует");
+        userStorage.getUser(userId).orElseThrow(() ->
+                new UserNotFoundException("Такого пользователя не существует"));
+        userStorage.getUser(friendId).orElseThrow(() ->
+                new UserNotFoundException("Такого друга не существует"));
+
+        List<User> userFriends = userStorage.getFriends(userId);
+
+        List<User> friendFriends = userStorage.getFriends(friendId);
+
+        if (userFriends.isEmpty() || friendFriends.isEmpty()) {
+            return new ArrayList<>();
         }
-        if (friend == null) {
-            log.warn("Пользователя  с таким ID {} не существует!", friendId);
-            throw new UserNotFoundException("Такого друга не существует");
-        }
-        Set<User> userFriends = user.getFriends().stream()
-                .map(userStorage::getUser)
-                .collect(Collectors.toSet());
-
-        Set<User> friendsFriends = friend.getFriends().stream()
-                .map(t -> userStorage.getUser(t))
-                .collect(Collectors.toSet());
-
-        userFriends.retainAll(friendsFriends);
-
+        userFriends.retainAll(friendFriends);
         return userFriends.stream()
                 .sorted(Comparator.comparingLong(User::getId))
                 .collect(Collectors.toList());
+    }
+
+    private void normalizeUser(User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
     }
 }

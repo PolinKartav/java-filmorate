@@ -6,11 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
-import ru.yandex.practicum.filmorate.validation.ValidationException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/films")
@@ -55,7 +54,7 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public Set<Film> getPopularFilm(@RequestParam(required = false) Integer count) {
+    public List<Film> getPopularFilm(@RequestParam(required = false) Integer count) {
         return filmService.getPopularFilm(count);
     }
 
